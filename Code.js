@@ -26,7 +26,7 @@ function onOpen() {
 function getDatosAPI() {
   
   // Mensaje de esto para el usuario
-  SpreadsheetApp.getActiveSpreadsheet().toast('Iniciando script...', 'Status', -1);
+  SpreadsheetApp.getActiveSpreadsheet().toast('Iniciando script...', 'Estado', 2);
   
   var ss = SpreadsheetApp.getActiveSpreadsheet();   
   var sheet = ss.getSheetByName(hojaDatos);
@@ -73,10 +73,8 @@ function getDatosAPI() {
     // Actualizamos la hoja destino con la respuesta
     sheet.getRange(2,1,numRows,numCols).setValues(jsonData);
     
-    sleep(1);
-    
     // Mensaje de esto para el usuario
-    SpreadsheetApp.getActiveSpreadsheet().toast('Finalizamos!', 'Status', -1);
+    SpreadsheetApp.getActiveSpreadsheet().toast('Finalizamos!', 'Estado', 2);
        
   } // else, exito en la llamada a la API 
   
