@@ -67,11 +67,12 @@ function leerArchivo(file) {
 
     access     = file.getSharingAccess();
     permission = file.getSharingPermission();
-    viewers    = file.getViewers();
     editors    = file.getEditors();
-
-    view = [];
+    viewers    = file.getViewers();
+    
     edit = [];
+    view = [];
+    
 
     date =  Utilities.formatDate(file.getDateCreated(), timezone, "yyyy-MM-dd HH:mm")
 
@@ -102,7 +103,7 @@ function leerArchivo(file) {
       default:
         privacy = "Unknown";
     }
-
+    
     switch(permission) {
       case DriveApp.Permission.COMMENT:
         permission = "can comment";
@@ -116,16 +117,13 @@ function leerArchivo(file) {
       default:
         permission = "";
     }
-
+  
+    edit = edit.join(", ");
     view = view.join(", ");
 
-    edit = edit.join(", ");
-
-    users = (permission === "" ? "" : " " + permission);
-    users_editors = (edit === "" ? "" : ", " + edit);
-    users_viewers = (view === "" ? "" : ", " + view);
-
-    //rows.push([url, privacy, date]);
+    user = file.getOwner().getName();
+    users_editors = (edit === "" ? "" : edit);
+    users_viewers = (view === "" ? "" : view);
 
   } catch (e) { Logger.log(e.toString()); Logger.log(file.getName()); };
 
@@ -134,7 +132,7 @@ function leerArchivo(file) {
     file.getName(),
     file.getUrl(),
     privacy, 
-    users,
+    user,
     users_editors, 
     users_viewers, 
     date,
