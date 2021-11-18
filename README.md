@@ -10,6 +10,9 @@ Usuarios avanzados usar git + clasp
 
 Este script lee el RSS publico disponible de las compras estatales de Uruguay y acumula informacion en una planilla.
 
-TODO:
-[ ] separar en columnas datos anidados en el texto descripcion
-[ ] obtener detalles de las compras abiertas
+https://www.comprasestatales.gub.uy/consultas/rss
+
+###TODO:
+
+- separar en columnas datos anidados en el texto descripcion
+- obtener detalles de las compras abiertas
