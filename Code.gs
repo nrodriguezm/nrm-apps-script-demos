@@ -2,10 +2,8 @@
 var timezone = Session.getScriptTimeZone();
 var ss = SpreadsheetApp.getActiveSpreadsheet();
   
-var hojaDatos = 'Archivos';
+var hojaDatos = 'Llamados';
 var sheet = ss.getSheetByName(hojaDatos);
-
-var rootID = "1AwDzuyFf7gfSJWn1EaNM__FgESj9-Bla";
 
 function onOpen() {
 
@@ -14,7 +12,7 @@ function onOpen() {
     var menuEntries = [];
  
     menuEntries.push({
-        name : "Leer Archivos Drive",
+        name : "Leer RSS",
         functionName : "actualizar"
     });
     menuEntries.push(null);
@@ -26,136 +24,44 @@ function onOpen() {
 
 function actualizar() {
 
-  // Lee una carpeta Drive 
-  var archivos = listarArchivos( DriveApp.getFolderById(rootID) );
+  // Leer RSS
+  var datosRss = parseAndUpdateRss('https://www.comprasestatales.gub.uy/consultas/rss');
 
-  console.log(archivos);
+  //console.log(datosRss);
 
   // Escribe los archivos leidos en Drive en la planilla
-  escribirArchivos(archivos);
+  escribirArchivos(datosRss);
 
 }
-
-function listarArchivos(folder) { // Modified
-
-  var filesData = [];
-
-  var folderName = folder.getName();
-  var files = folder.getFiles();
-
-  while (files.hasNext()) {
-    //var fileName = files.next().getName();
-    Logger.log(folderName);
-
-    filesData.push( leerArchivo(files.next()) );
-  }
-
-  var subfolders = folder.getFolders();
-  while (subfolders.hasNext()) {
-    listarArchivos(subfolders.next()); // Modified
-  }
-
-  return filesData;
-}
-
-
-function leerArchivo(file) {
-
-  console.log( 'leerArchivo: ' + file.getName() );
-
-  try {
-
-    access     = file.getSharingAccess();
-    permission = file.getSharingPermission();
-    editors    = file.getEditors();
-    viewers    = file.getViewers();
-    
-    edit = [];
-    view = [];
-    
-
-    date =  Utilities.formatDate(file.getDateCreated(), timezone, "yyyy-MM-dd HH:mm")
-
-    for (var v=0; v<viewers.length; v++) {
-      view.push(viewers[v].getName() + " " + viewers[v].getEmail());
-    }
-
-    for (var ed=0; ed<editors.length; ed++) {
-      edit.push(editors[ed].getName() + " " + editors[ed].getEmail());
-    }
-
-    switch(access) {
-      case DriveApp.Access.PRIVATE:
-        privacy = "Private";
-        break;
-      case DriveApp.Access.ANYONE:
-        privacy = "Anyone";
-        break;
-      case DriveApp.Access.ANYONE_WITH_LINK:
-        privacy = "Anyone with a link";
-        break;
-      case DriveApp.Access.DOMAIN:
-        privacy = "Anyone inside domain";
-        break;
-      case DriveApp.Access.DOMAIN_WITH_LINK:
-        privacy = "Anyone inside domain who has the link";
-        break;
-      default:
-        privacy = "Unknown";
-    }
-    
-    switch(permission) {
-      case DriveApp.Permission.COMMENT:
-        permission = "can comment";
-        break;
-      case DriveApp.Permission.VIEW:
-        permission = "can view";
-        break;
-      case DriveApp.Permission.EDIT:
-        permission = "can edit";
-        break;
-      default:
-        permission = "";
-    }
-  
-    edit = edit.join(", ");
-    view = view.join(", ");
-
-    user = file.getOwner().getName();
-    users_editors = (edit === "" ? "" : edit);
-    users_viewers = (view === "" ? "" : view);
-
-  } catch (e) { Logger.log(e.toString()); Logger.log(file.getName()); };
-
-  return [
-    file.getId(),
-    file.getName(),
-    file.getUrl(),
-    privacy, 
-    user,
-    users_editors, 
-    users_viewers, 
-    date,
-    file.getSize(),
-    file.getDescription(),
-    file.getMimeType(),
-  ];
-  
-}
-
 
 // Recorrer e insertar en planilla
 function escribirArchivos(data) {
     
+  var Dvals = flatten(ss.getRange("D1:D").getValues());
+  console.log(Dvals);
+
+  var resultado = data.filter(function (row) {
+    console.log('Looking for: ' + row[3] + ', indexOf: ' + Dvals.indexOf(row[3]));
+    return Dvals.indexOf(row[3]) === -1;
+  }); 
+
   // calculate the number of rows and columns needed
-  var numRows = data.length;
+  var numRows = resultado.length;
 
   if (numRows > 0) {
-    var numCols = data[0].length;
+    var numCols = resultado[0].length;
                       
     // Escribir en filas nuevas antes de la fila 2 (para mantener formato)
     sheet.insertRowsBefore(2, numRows);
-    sheet.getRange(2, 1, numRows, numCols).setValues(data);
+    sheet.getRange(2, 1, numRows, numCols).setValues(resultado);
   }
 
+  ss.toast("Se escribieron " + resultado.length + " nuevas publicaciones.", "Actualizacion");
+
 }
+
+// Aplana un nivel de array anidado, util para getValues y tener los valores en un arreglo
+function flatten(arrayOfArrays){
+  return [].concat.apply([], arrayOfArrays);
+}
+
